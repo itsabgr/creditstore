@@ -27,12 +27,15 @@ type CreditStore interface {
 	Clean() error
 }
 type Lock interface {
-	String() string
+	Encode() []byte
+	Account() Account
+	ID() string
+	Credit() Credit
 }
 type Tx interface {
 	Lock(account Account, amount Credit, deadline uint64) (Lock, error)
-	Transfer(a Account, lock Lock, to Account, amount Credit) error
-	Unlock(Account, Lock) error
+	Transfer(lock Lock, to Account, amount Credit) error
+	Unlock(Lock) error
 	Sum(account Account) (Credit, error)
 	Closed() bool
 	IsMoreThan(Account, Credit) (bool, error)

@@ -18,6 +18,9 @@ func (t tx) Closed() bool {
 }
 
 func (t tx) Close() error {
+	if t.closed {
+		return nil
+	}
 	t.tx.Discard()
 	t.closed = true
 	return nil
@@ -88,8 +91,8 @@ func (t tx) Lock(account Account, amount Credit, deadline uint64) (Lock, error) 
 	}
 	var lock Lock
 	for {
-		lock = randLock()
-		exists, err := t.exists(account.String(), lock.String())
+		lock = randLock(account, amount)
+		exists, err := t.exists(account.String(), lock.ID())
 		if err != nil {
 			return nil, err
 		}
@@ -100,10 +103,11 @@ func (t tx) Lock(account Account, amount Credit, deadline uint64) (Lock, error) 
 		break
 	}
 	amount.Neg()
-	return lock, t.set(account.String(), lock.String(), amount, deadline)
+	return lock, t.set(account.String(), lock.ID(), amount, deadline)
 }
-func (t tx) Transfer(from Account, lock Lock, to Account, amount Credit) error {
-	max, err := t.get(from.String(), lock.String())
+func (t tx) Transfer(lock Lock, to Account, amount Credit) error {
+	from := lock.Account()
+	max, err := t.get(from.String(), lock.ID())
 	if err != nil {
 		return err
 	}
@@ -122,7 +126,7 @@ func (t tx) Transfer(from Account, lock Lock, to Account, amount Credit) error {
 		return err
 	}
 
-	err = t.Unlock(from, lock)
+	err = t.Unlock(lock)
 	if err != nil {
 		_ = t.Close()
 		return err
@@ -130,8 +134,8 @@ func (t tx) Transfer(from Account, lock Lock, to Account, amount Credit) error {
 	return nil
 }
 
-func (t tx) Unlock(a Account, l Lock) error {
-	return t.delete(a.String(), l.String())
+func (t tx) Unlock(l Lock) error {
+	return t.delete(l.Account().String(), l.ID())
 }
 
 func (t tx) Sum(account Account) (Credit, error) {

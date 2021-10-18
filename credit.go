@@ -1,6 +1,7 @@
 package creditstore
 
 import (
+	"errors"
 	"github.com/itsabgr/go-handy"
 	"math/big"
 )
@@ -52,6 +53,13 @@ func NewCredit(n *big.Int) Credit {
 	c := new(credit)
 	c.int = new(big.Int).Set(n)
 	return c
+}
+func NewCreditFromString(str string) (Credit, error) {
+	n, ok := new(big.Int).SetString(str, 10)
+	if !ok {
+		return nil, errors.New("could not parse credit")
+	}
+	return NewCredit(n), nil
 }
 
 func DecodeCredit(b []byte) (Credit, error) {

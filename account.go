@@ -11,10 +11,10 @@ func (a account) String() string {
 	return string(a)
 }
 
-func NewAccount(name string) Account {
+func NewAccount(name string) (Account, error) {
 	if strings.Contains(name, ".") {
-		panic(errors.New(`account name contains "."`))
+		return nil, errors.New(`account name contains "."`)
 	}
 	a := account(name)
-	return a
+	return a, nil
 }
